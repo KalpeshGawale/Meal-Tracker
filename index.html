@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MealTracker - Track Your Daily Meals</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --accent: #ec4899;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg-dark: #0a0e27;
+            --bg-secondary: #1a1f3a;
+            --bg-card: rgba(30, 41, 59, 0.4);
+            --bg-glass: rgba(15, 23, 42, 0.5);
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border: rgba(148, 163, 184, 0.1);
+        }
+
+        body {
+            font-family: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-secondary) 50%, #1a1f3a 100%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background elements */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -50%;
+            width: 150%;
+            height: 150%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+            animation: float 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(30px, -30px) rotate(90deg); }
+            50% { transform: translate(0, -60px) rotate(180deg); }
+            75% { transform: translate(-30px, -30px) rotate(270deg); }
+        }
+
+        .container {
+            max-width: 750px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 40px;
+            padding: 30px 0 20px;
+            animation: slideDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(236, 72, 153, 0.2) 100%);
+            border: 1.5px solid var(--border);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .header:hover .header-icon {
+            transform: scale(1.05) rotate(5deg);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.4) 0%, rgba(236, 72, 153, 0.3) 100%);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .badge {
+            margin-left: auto;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(10px);
+            animation: pulse-badge 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-badge {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation-fill-mode: both;
+            transition: all 0.4s ease;
+        }
+
+        .section:nth-child(2) { animation-delay: 0.1s; }
+        .section:nth-child(3) { animation-delay: 0.2s; }
+        .section:nth-child(4) { animation-delay: 0.3s; }
+        .section:nth-child(5) { animation-delay: 0.4s; }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section:hover {
+            background: rgba(30, 41, 59, 0.5);
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 12px 40px rgba(99, 102, 241, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+
+        .section-title-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(236, 72, 153, 0.2) 100%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .section:hover .section-title-icon {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.4) 0%, rgba(236, 72, 153, 0.3) 100%);
+            transform: translateY(-2px);
+        }
+
+        .date-selector {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: rgba(15, 23, 42, 0.4);
+            padding: 14px 18px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            margin-bottom: 16px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .date-selector:focus-within {
+            background: rgba(15, 23, 42, 0.6);
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);
+        }
+
+        .date-selector input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            font-weight: 500;
+        }
+
+        .date-selector input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .meals-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .meal-card {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1.5px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .meal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .meal-card:hover::before {
+            left: 100%;
+        }
+
+        .meal-card:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            background: rgba(30, 41, 59, 0.5);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+        }
+
+        .meal-card.active {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 24px rgba(99, 102, 241, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            animation: pulse-card 0.6s ease-out;
+        }
+
+        @keyframes pulse-card {
+            0% { transform: scale(0.95); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .meal-icon {
+            font-size: 42px;
+            margin-bottom: 10px;
+            display: inline-block;
+            animation: bounce 0.6s ease-out forwards;
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(-10px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .meal-card:nth-child(1) .meal-icon { animation-delay: 0.2s; }
+        .meal-card:nth-child(2) .meal-icon { animation-delay: 0.3s; }
+
+        .meal-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            letter-spacing: -0.2px;
+        }
+
+        .meal-price {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .meal-card.active .meal-price {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .checkbox-input {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary);
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+
+        .meal-card:hover .checkbox-input {
+            opacity: 1;
+        }
+
+        .save-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            letter-spacing: -0.2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .save-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(99, 102, 241, 0.4), 0 0 20px rgba(236, 72, 153, 0.2);
+        }
+
+        .save-btn:hover::before {
+            opacity: 1;
+        }
+
+        .save-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            animation: fadeIn 0.6s ease-out 0.5s both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .history-table thead {
+            background: rgba(99, 102, 241, 0.1);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .history-table th {
+            padding: 14px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--primary-light);
+        }
+
+        .history-table td {
+            padding: 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .history-table tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        .history-table tbody tr:hover {
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        .meal-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+        }
+
+        .status-check {
+            color: var(--success);
+            font-size: 18px;
+            animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .status-cross {
+            color: var(--danger);
+            font-size: 18px;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .delete-btn:hover {
+            color: #ff6b6b;
+            transform: scale(1.1);
+        }
+
+        .totals-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 20px;
+        }
+
+        .total-card {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1.5px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .total-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), transparent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .total-card:hover {
+            background: rgba(30, 41, 59, 0.5);
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .total-card:hover::before {
+            opacity: 1;
+        }
+
+        .total-card.combined {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(236, 72, 153, 0.1) 100%);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .total-card.combined:hover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(236, 72, 153, 0.15) 100%);
+            box-shadow: 0 12px 32px rgba(99, 102, 241, 0.2);
+        }
+
+        .total-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .total-card:hover .total-label {
+            color: var(--primary-light);
+        }
+
+        .total-amount {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .total-card.combined .total-amount {
+            font-size: 36px;
+        }
+
+        .total-amount::after {
+            content: ' ₹';
+            font-size: 20px;
+            opacity: 0.8;
+        }
+
+        .total-card.combined .total-amount::after {
+            font-size: 26px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-secondary);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .empty-state-icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+            animation: float-icon 3s ease-in-out infinite;
+        }
+
+        @keyframes float-icon {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 24px 20px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-top: 40px;
+            animation: fadeIn 0.8s ease-out 0.7s both;
+        }
+
+        .footer a {
+            color: var(--primary-light);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: var(--accent);
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                max-width: 100%;
+            }
+
+            .header {
+                margin-bottom: 30px;
+            }
+
+            .header h1 {
+                font-size: 26px;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .meals-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .history-table {
+                font-size: 12px;
+            }
+
+            .history-table th, .history-table td {
+                padding: 10px;
+            }
+
+            .total-amount {
+                font-size: 24px;
+            }
+
+            .total-card.combined .total-amount {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-icon">🍽️</div>
+            <h1>MealTracker</h1>
+            <div class="badge">Daily Tracking</div>
+        </div>
+
+        <!-- Date Selection Section -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-title-icon">📅</div>
+                Select Date
+            </div>
+            <div class="date-selector">
+                <span>📆</span>
+                <input type="date" id="dateInput">
+            </div>
+        </div>
+
+        <!-- Meals Section -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-title-icon">🍴</div>
+                Meals Consumed
+            </div>
+            <div class="meals-grid">
+                <div class="meal-card" id="breakfastCard">
+                    <input type="checkbox" class="checkbox-input" id="breakfastCheckbox">
+                    <div class="meal-icon">🌅</div>
+                    <div class="meal-name">Breakfast</div>
+                    <div class="meal-price">₹110</div>
+                </div>
+                <div class="meal-card" id="dinnerCard">
+                    <input type="checkbox" class="checkbox-input" id="dinnerCheckbox">
+                    <div class="meal-icon">🌙</div>
+                    <div class="meal-name">Dinner</div>
+            <div class="meal-price">₹110</div>
+                </div>
+            </div>
+            <button class="save-btn" id="saveBtn">
+                <span>💾</span>
+                Save Day
+            </button>
+        </div>
+
+        <!-- Meal History Section -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-title-icon">📋</div>
+                Meal History
+            </div>
+            <div id="historyContainer">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📊</div>
+                    <div class="empty-state-text">No meals tracked yet. Start tracking your meals!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cost Summary Section -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-title-icon">💰</div>
+                Cost Summary
+            </div>
+            <div class="totals-grid">
+                <div class="total-card">
+                    <div class="total-label">Breakfast Total</div>
+                    <div class="total-amount" id="breakfastTotal">0</div>
+                </div>
+                <div class="total-card">
+                    <div class="total-label">Dinner Total</div>
+                    <div class="total-amount" id="dinnerTotal">0</div>
+                </div>
+                <div class="total-card combined">
+                    <div class="total-label">💎 Combined Total</div>
+                    <div class="total-amount" id="combinedTotal">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            💻 Built with ❤️ | MealTracker v1.0
+        </div>
+    </div>
+
+    <script>
+        const MEAL_PRICE = 110;
+        const STORAGE_KEY = 'mealTrackerData';
+
+        const dateInput = document.getElementById('dateInput');
+        const breakfastCheckbox = document.getElementById('breakfastCheckbox');
+        const dinnerCheckbox = document.getElementById('dinnerCheckbox');
+        const breakfastCard = document.getElementById('breakfastCard');
+        const dinnerCard = document.getElementById('dinnerCard');
+        const saveBtn = document.getElementById('saveBtn');
+        const historyContainer = document.getElementById('historyContainer');
+        const breakfastTotal = document.getElementById('breakfastTotal');
+        const dinnerTotal = document.getElementById('dinnerTotal');
+        const combinedTotal = document.getElementById('combinedTotal');
+
+        // Set today's date by default
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+        }
+
+        // Toggle meal card and checkbox with animations
+        function toggleMeal(checkbox, card) {
+            checkbox.addEventListener('change', () => {
+                card.classList.toggle('active', checkbox.checked);
+            });
+            card.addEventListener('click', (e) => {
+                if (e.target !== checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event('change'));
+                    card.classList.toggle('active', checkbox.checked);
+                }
+            });
+        }
+
+        toggleMeal(breakfastCheckbox, breakfastCard);
+        toggleMeal(dinnerCheckbox, dinnerCard);
+
+        // Load data from localStorage
+        function loadData() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        // Save data to localStorage
+        function saveData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        // Animate number change
+        function animateNumber(element, newValue) {
+            const currentValue = parseInt(element.textContent) || 0;
+            const diff = newValue - currentValue;
+            const duration = 600;
+            const steps = 30;
+            const stepValue = diff / steps;
+            let current = 0;
+
+            const interval = setInterval(() => {
+                current++;
+                const value = currentValue + (stepValue * current);
+                element.textContent = Math.round(value);
+
+                if (current >= steps) {
+                    element.textContent = newValue;
+                    clearInterval(interval);
+                }
+            }, duration / steps);
+        }
+
+        // Save day
+        saveBtn.addEventListener('click', () => {
+            const date = dateInput.value;
+            if (!date) {
+                alert('Please select a date');
+                return;
+            }
+
+            const data = loadData();
+            const existingIndex = data.findIndex(item => item.date === date);
+
+            const newEntry = {
+                date: date,
+                breakfast: breakfastCheckbox.checked,
+                dinner: dinnerCheckbox.checked
+            };
+
+            if (existingIndex >= 0) {
+                data[existingIndex] = newEntry;
+            } else {
+                data.push(newEntry);
+            }
+
+            // Sort by date descending
+            data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            saveData(data);
+            breakfastCheckbox.checked = false;
+            dinnerCheckbox.checked = false;
+            breakfastCard.classList.remove('active');
+            dinnerCard.classList.remove('active');
+            setTodayDate();
+            renderHistory();
+            updateTotals();
+
+            // Show success feedback
+            saveBtn.textContent = '✓ Saved!';
+            saveBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            setTimeout(() => {
+                saveBtn.innerHTML = '<span>💾</span>Save Day';
+                saveBtn.style.background = '';
+            }, 1500);
+        });
+
+        // Render meal history
+        function renderHistory() {
+            const data = loadData();
+
+            if (data.length === 0) {
+                historyContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📊</div>
+                        <div class="empty-state-text">No meals tracked yet. Start tracking your meals!</div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Breakfast</th>
+                            <th>Dinner</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            data.forEach((item, index) => {
+                const breakfastStatus = item.breakfast ? '<div class="meal-status status-check">✓</div>' : '<div class="meal-status status-cross">✕</div>';
+                const dinnerStatus = item.dinner ? '<div class="meal-status status-check">✓</div>' : '<div class="meal-status status-cross">✕</div>';
+
+                html += `
+                    <tr>
+                        <td>${formatDate(item.date)}</td>
+                        <td>${breakfastStatus}</td>
+                        <td>${dinnerStatus}</td>
+                        <td><button class="delete-btn" onclick="deleteEntry('${item.date}')">Delete</button></td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            historyContainer.innerHTML = html;
+        }
+
+        // Format date for display
+        function formatDate(dateString) {
+            const options = { day: '2-digit', month: '2-digit', year: '2-digit' };
+            return new Date(dateString).toLocaleDateString('en-IN', options);
+        }
+
+        // Delete entry
+        window.deleteEntry = function(date) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                let data = loadData();
+                data = data.filter(item => item.date !== date);
+                saveData(data);
+                renderHistory();
+                updateTotals();
+            }
+        };
+
+        // Update totals with animation
+        function updateTotals() {
+            const data = loadData();
+            const breakfastCount = data.filter(item => item.breakfast).length;
+            const dinnerCount = data.filter(item => item.dinner).length;
+            const combinedCount = breakfastCount + dinnerCount;
+
+            const breakfastValue = breakfastCount * MEAL_PRICE;
+            const dinnerValue = dinnerCount * MEAL_PRICE;
+            const combinedValue = combinedCount * MEAL_PRICE;
+
+            animateNumber(breakfastTotal, breakfastValue);
+            animateNumber(dinnerTotal, dinnerValue);
+            animateNumber(combinedTotal, combinedValue);
+        }
+
+        // Initialize
+        setTodayDate();
+        renderHistory();
+        updateTotals();
+    </script>
+</body>
+</html>
